@@ -1,34 +1,52 @@
-# From Zero to Four Pages: POS Foundations
+# CodeIgniter POS Foundation TFA2
 
-A beginner-friendly four-page Point-of-Sale foundation built with CodeIgniter 4 for IT0049 Web System Technologies Technical Formative Assessment 1.
+This CodeIgniter 4 application extends the TFA1 four-page POS foundation. Customer and user records now come from a MySQL database through CodeIgniter Models and `findAll()`, instead of static PHP arrays.
 
 ## Features
 
-- Landing page at `/`
+- Home page at `/`
 - About page at `/about`
-- Customer Accounts page at `/customers`
-- User Accounts page at `/users`
+- Customer Accounts at `/customers`
+- User Accounts at `/users`
 - Shared navigation and responsive styling
-- Static PHP-array data displayed with `foreach` loops
+- MySQL database with `customers` and `users` tables
+- `CustomerModel` and `UserModel` using CodeIgniter Query Builder methods
+- MVC separation between models, controllers, and views
 
 ## Requirements
 
-- PHP 8.2 or later
+- PHP 8.2 or later with the MySQLi extension
 - Composer
-- CodeIgniter 4.7.4 (installed through Composer)
+- CodeIgniter 4.7
+- MySQL or MariaDB (XAMPP is suitable)
 
 ## Installation
 
-1. Clone or download this project.
-2. Open a terminal in the project directory.
-3. Install dependencies: `composer install`
-4. Copy `env` to `.env` if `.env` does not exist.
-5. Set the local base URL in `.env`:
+1. Clone or download this project and open a terminal in its directory.
+2. Install dependencies: `composer install`.
+3. Start MySQL through XAMPP or another local MySQL/MariaDB installation.
+4. Import [`database/pos_database.sql`](database/pos_database.sql) into MySQL or phpMyAdmin. The script creates the `pos_database` database, both tables, and five sample records in each table.
+5. Copy `env` to `.env` if `.env` does not exist, then configure the database:
 
    ```dotenv
    CI_ENVIRONMENT = development
    app.baseURL = 'http://localhost:8080/'
+   database.default.hostname = localhost
+   database.default.database = pos_database
+   database.default.username = root
+   database.default.password =
+   database.default.DBDriver = MySQLi
+   database.default.port = 3306
    ```
+
+   The included local `.env` assumes the common XAMPP default of user `root` with no password. Change the values if your installation differs. `.env` is ignored by Git and must not contain real credentials in a public repository.
+
+## Database Tables
+
+- `customers`: `id`, `full_name`, `email`, `phone`, `created_at`
+- `users`: `id`, `username`, `full_name`, `created_at`
+
+The required `users` schema has no `role` column, so the Users page displays only username and full name.
 
 ## Routes
 
@@ -39,22 +57,20 @@ A beginner-friendly four-page Point-of-Sale foundation built with CodeIgniter 4 
 | Customer Accounts | `/customers` |
 | User Accounts | `/users` |
 
-## Data Source
+## Running the Application
 
-The Customer Accounts and User Accounts pages intentionally use static PHP arrays defined in their controllers. The arrays are passed to the views, where `foreach` renders each record. This assessment does not use a database; database integration belongs to a later module.
-
-## Running Locally
-
-From the project directory, start CodeIgniter's development server:
+From the project directory, start the CodeIgniter development server:
 
 ```bash
 php spark serve
 ```
 
-Then open [http://localhost:8080/](http://localhost:8080/) in a browser.
+Open [http://localhost:8080/](http://localhost:8080/) in a browser. For a production-style local server, point the document root to `public/`.
 
-For a production-style local server, point the document root to the `public/` directory. Do not use the project root as the public document root.
+## Database Flow
 
-## Assessment note
+The Customers controller instantiates `CustomerModel` and passes `$model->findAll()` to the existing Customers view. The Users controller does the same with `UserModel`. The views retain their `foreach` loops and presentation structure; they do not query the database directly.
 
-The activity brief includes a submission line mentioning a database export, but the laboratory requirements explicitly specify static arrays and no database for this version. No fabricated database export is included.
+## GitHub and Security
+
+The real `.env` file is excluded by `.gitignore`. Commit the SQL export and source files, but do not commit passwords, API keys, or other secrets. A new developer should configure their own ignored `.env` using the example above.
