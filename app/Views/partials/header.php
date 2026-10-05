@@ -22,6 +22,7 @@
                 <a class="<?= ($activePage ?? '') === 'users' ? 'active' : '' ?>" href="<?= site_url('users') ?>">Users</a>
                 <a class="<?= ($activePage ?? '') === 'profile' ? 'active' : '' ?>" href="<?= site_url('profile') ?>">Profile</a>
                 <a class="<?= ($activePage ?? '') === 'about' ? 'active' : '' ?>" href="<?= site_url('about') ?>">About</a>
+                <?php if (session('is_logged_in') === true): ?><span class="login-user">Signed in as <?= esc(session('username')) ?></span><a href="<?= site_url('logout') ?>">Log out</a><?php else: ?><a class="<?= ($activePage ?? '') === 'login' ? 'active' : '' ?>" href="<?= site_url('login') ?>">Log in</a><?php endif; ?>
             </nav>
         </div>
     </header>

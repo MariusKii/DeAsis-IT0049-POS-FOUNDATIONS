@@ -24,11 +24,24 @@ class TasksSeeder extends Seeder
             ['title' => 'Test the profile page', 'status' => 'pending', 'task_date' => $tomorrow, 'created_at' => $createdAt],
         ]);
 
-        $this->db->table('users')->insert([
+        $defaultPasswordHash = password_hash('password123', PASSWORD_DEFAULT);
+        $userData = [
             'username' => 'student01',
             'full_name' => 'Demo Student',
             'email' => 'student01@example.com',
+            'password' => $defaultPasswordHash,
             'created_at' => $createdAt,
-        ]);
+        ];
+        $users = $this->db->table('users');
+        if ($users->where('username', $userData['username'])->countAllResults() > 0) {
+            $users->where('username', $userData['username'])->update([
+                'full_name' => $userData['full_name'],
+                'email' => $userData['email'],
+                'password' => $userData['password'],
+            ]);
+        } else {
+            $users->insert($userData);
+        }
+        $users->where('password IS NULL', null, false)->update(['password' => $defaultPasswordHash]);
     }
 }

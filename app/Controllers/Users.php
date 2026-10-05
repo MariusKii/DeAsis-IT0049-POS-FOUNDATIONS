@@ -16,7 +16,7 @@ class Users extends BaseController
 
     public function index(): string
     {
-        return view('users/accounts', ['title' => 'User Accounts', 'activePage' => 'users', 'users' => $this->users->orderBy('full_name', 'ASC')->findAll()]);
+        return view('users/accounts', ['title' => 'User Accounts', 'activePage' => 'users', 'users' => $this->users->select('id, username, full_name, email, avatar, created_at')->orderBy('full_name', 'ASC')->findAll()]);
     }
 
     public function new(): string
@@ -26,10 +26,10 @@ class Users extends BaseController
 
     public function create()
     {
-        if (! $this->validate(['username' => 'required|max_length[50]|is_unique[users.username]', 'full_name' => 'required|max_length[100]', 'email' => 'required|valid_email|max_length[100]'])) {
-            return redirect()->back()->withInput();
+        if (! $this->validate(['username' => 'required|max_length[50]|is_unique[users.username]', 'full_name' => 'required|max_length[100]', 'email' => 'required|valid_email|max_length[100]', 'password' => 'required|min_length[8]'])) {
+            return $this->redirectToFormWithSafeInput();
         }
-        $this->users->insert(['username' => trim((string) $this->request->getPost('username')), 'full_name' => trim((string) $this->request->getPost('full_name')), 'email' => trim((string) $this->request->getPost('email')), 'created_at' => date('Y-m-d H:i:s')]);
+        $this->users->insert(['username' => trim((string) $this->request->getPost('username')), 'full_name' => trim((string) $this->request->getPost('full_name')), 'email' => trim((string) $this->request->getPost('email')), 'password' => password_hash((string) $this->request->getPost('password'), PASSWORD_DEFAULT), 'created_at' => date('Y-m-d H:i:s')]);
         return redirect()->to(site_url('users'))->with('success', 'User created successfully.');
     }
 
@@ -39,6 +39,7 @@ class Users extends BaseController
         if ($user === null) {
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('User not found.');
         }
+        unset($user['password']);
         return view('users/form', ['title' => 'Edit User', 'activePage' => 'users', 'user' => $user, 'formAction' => site_url('users/update/' . $id), 'formTitle' => 'Edit User', 'submitLabel' => 'Save Changes']);
     }
 
@@ -49,14 +50,20 @@ class Users extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('User not found.');
         }
         $rules = ['username' => 'required|max_length[50]|is_unique[users.username,id,' . $id . ']', 'full_name' => 'required|max_length[100]', 'email' => 'required|valid_email|max_length[100]'];
+        if ((string) $this->request->getPost('password') !== '') {
+            $rules['password'] = 'min_length[8]';
+        }
         $file = $this->request->getFile('avatar');
         if ($file instanceof UploadedFile && $file->getError() !== UPLOAD_ERR_NO_FILE) {
             $rules['avatar'] = 'is_image[avatar]|mime_in[avatar,image/jpg,image/jpeg,image/png]|max_size[avatar,2048]';
         }
         if (! $this->validate($rules)) {
-            return redirect()->back()->withInput();
+            return $this->redirectToFormWithSafeInput();
         }
         $data = ['username' => trim((string) $this->request->getPost('username')), 'full_name' => trim((string) $this->request->getPost('full_name')), 'email' => trim((string) $this->request->getPost('email'))];
+        if ((string) $this->request->getPost('password') !== '') {
+            $data['password'] = password_hash((string) $this->request->getPost('password'), PASSWORD_DEFAULT);
+        }
         $oldAvatar = $user['avatar'] ?? null;
         $newAvatar = $this->storeAvatar($file);
         if ($newAvatar !== null) {
@@ -85,5 +92,15 @@ class Users extends BaseController
         $filename = bin2hex(random_bytes(16)) . '.' . ($extension === 'jpeg' ? 'jpg' : $extension);
         service('image')->withFile($file->getTempName())->resize(256, 256, true, 'width')->save($directory . DIRECTORY_SEPARATOR . $filename);
         return $filename;
+    }
+
+    private function redirectToFormWithSafeInput()
+    {
+        $post = $this->request->getPost();
+        unset($post['password']);
+        service('session')->setFlashdata('_ci_old_input', ['get' => [], 'post' => $post]);
+        service('session')->setFlashdata('_ci_validation_errors', service('validation')->getErrors());
+
+        return redirect()->back();
     }
 }

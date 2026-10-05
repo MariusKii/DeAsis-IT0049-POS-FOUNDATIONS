@@ -20,6 +20,7 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     avatar VARCHAR(255) NULL,
     created_at DATETIME NOT NULL
 );
@@ -41,5 +42,5 @@ INSERT INTO tasks (title, status, task_date, created_at) VALUES
     ('Check application routes', 'completed', '2026-09-30', '2026-09-29 11:15:00'),
     ('Test the profile page', 'pending', '2026-09-30', '2026-09-29 11:30:00');
 
-INSERT INTO users (username, full_name, email, created_at) VALUES
-    ('student01', 'Demo Student', 'student01@example.com', '2026-09-28 08:00:00');
+INSERT INTO users (username, full_name, email, password, created_at) VALUES
+    ('student01', 'Demo Student', 'student01@example.com', '$2y$12$ZJMf19x61KhI8ZRCaxBLwuMlzFfZFuiVoj90ojuEAQy5YnJ0OiY0a', '2026-09-28 08:00:00');

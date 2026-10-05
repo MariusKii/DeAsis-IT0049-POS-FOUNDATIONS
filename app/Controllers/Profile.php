@@ -13,7 +13,7 @@ class Profile extends BaseController
         return view('users/index', [
             'title' => 'Profile',
             'activePage' => 'profile',
-            'user' => $userModel->first(),
+            'user' => $userModel->select('id, username, full_name, email, avatar, created_at')->first(),
         ]);
     }
 }
